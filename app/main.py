@@ -237,7 +237,7 @@ def tradesum_set_recent(period: str='RECENT', start: str='2015-01-01', end: str=
     df = df.sort_index(ascending=False).reset_index()
     df.date = df.date.astype(str)
 
-    df = df['date','FundValBuySum','FundValSellSum','FundValNetSum','ForeignValBuySum','ForeignValSellSum','ForeignValNetSum','TradingValBuySum','TradingValSellSum','TradingValNetSum','CustomerValBuySum','CustomerValSellSum','CustomerValNetSum']
+    df = df[['date','FundValBuySum','FundValSellSum','FundValNetSum','ForeignValBuySum','ForeignValSellSum','ForeignValNetSum','TradingValBuySum','TradingValSellSum','TradingValNetSum','CustomerValBuySum','CustomerValSellSum','CustomerValNetSum']]
 
     result = json.loads(df.to_json(orient='records',date_format ='ISO'))
     return result

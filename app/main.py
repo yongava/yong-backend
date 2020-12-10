@@ -7,6 +7,8 @@ from . import crud, models, schemas
 from .database import SessionLocal, engine
 from sqlalchemy.orm import Session
 
+from azure.storage.blob import BlobClient
+
 from bs4 import BeautifulSoup
 
 import datetime
@@ -201,14 +203,21 @@ def tradesum_tfex(start: str='2016-01-01', end: str=datetime.datetime.today().st
         result = {"status":"FAILURE","message":f"{e}"}
 
     try:
-        mypath = '/home/alpha/yong/yong-backend/app'
-        df = pandas.read_csv(f'{mypath}/tfex-trade-history.csv', thousands=',')
+        connection_string = "DefaultEndpointsProtocol=https;AccountName=alpharesearch;AccountKey=v1zCpiYiSgIzXgb58YI9tA3ebi1OtyoMeA6cu2vFzmk94zxC4DepNWlT8+dpsNELDFq+0owUrY1gehvCzSFZ6A==;EndpointSuffix=core.windows.net"
+        blob = BlobClient.from_connection_string(conn_str=connection_string, container_name="yongcontainer", blob_name="my_csv")
+        with open("tfex-trade-history.csv", "wb") as my_blob:
+            blob_data = blob.download_blob()
+            blob_data.readinto(my_blob)
+        df = pandas.read_csv('tfex-trade-history.csv', thousands=',')
         df = df.append(output,ignore_index=True)
         df = df.set_index('date')
         df.index = pandas.to_datetime(df.index)
         df = df.apply(pandas.to_numeric)
         df = df[~df.index.duplicated(keep='last')]
-        df.to_csv(f'{mypath}/tfex-trade-history.csv')
+        df.to_csv('tfex-trade-history.csv')
+        with open("tfex-trade-history.csv", "rb") as data:
+            blob.upload_blob(data)
+            
         df = df[start:end]
         df = df.sort_index(ascending=False)
         df.index = df.index.astype(str)

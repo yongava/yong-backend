@@ -147,7 +147,6 @@ def recent_tradesum_tfex():
     try:
         page = urllib.request.urlopen('https://marketdata.set.or.th/tfx/tfexinvestortypetrading.do?locale=th_TH')
         soup = BeautifulSoup(page, 'html.parser')
-        textdate = [content.text.replace("\r","").replace("\n","").replace("  ","") for content in soup.findAll('caption',)][0]
         table = soup.find('tbody',)
         table_rows = table.findAll('tr')
         l = []
@@ -169,3 +168,4 @@ def recent_tradesum_tfex():
                     'CustomerValNet': float(df.at[1,'l_net'].replace('+','').replace(',',''))}
     except:
         result = {"status":"FAILURE","message":"Can't get data"}
+    return result

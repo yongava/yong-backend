@@ -221,7 +221,7 @@ def tradesum_tfex(start: str='2016-01-01', end: str=datetime.datetime.today().st
         df = df.sort_index(ascending=False)
         df.index = df.index.astype(str)
         df = df.reset_index()
-        result = df.to_json(orient='records',date_format ='ISO').replace("\\","").replace("\","")
+        result = df.to_json(orient='records',date_format ='ISO').replace('\"',"").replace('\\',"")
     except Exception as e:
         result = {"status":"FAILURE","message":f"{e}"}
     return result

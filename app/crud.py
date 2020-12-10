@@ -136,7 +136,7 @@ def get_set_trade_summary(start: str, end: str, db: Session):
                         FundValBuy,FundValSell,
                         ForeignValBuy,ForeignValSell,
                         TradingValBuy,TradingValSell,
-                        CustomerValBuy,ForeignValSell,
+                        CustomerValBuy,CustomerValSell,
                         FundValBuy-FundValSell AS FundValNet,
                         ForeignValBuy-ForeignValSell AS ForeignValNet, 
                         TradingValBuy-TradingValSell AS TradingValNet, 

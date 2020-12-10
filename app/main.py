@@ -14,6 +14,7 @@ import json
 import pandas
 import requests
 import urllib.request
+from pathlib import Path
 
 app = FastAPI()
 
@@ -200,13 +201,14 @@ def tradesum_tfex(start: str='2016-01-01', end: str=datetime.datetime.today().st
         result = {"status":"FAILURE","message":f"{e}"}
 
     try:
-        df = pandas.read_csv('tfex-trade-history.csv', thousands=',')
+        mypath = Path().absolute()
+        df = pandas.read_csv(f'{mypath}/tfex-trade-history.csv', thousands=',')
         df = df.append(output,ignore_index=True)
         df = df.set_index('date')
         df.index = pandas.to_datetime(df.index)
         df = df.apply(pandas.to_numeric)
         df = df[~df.index.duplicated(keep='last')]
-        df.to_csv('tfex-trade-history.csv')
+        df.to_csv(f'{mypath}/tfex-trade-history.csv')
         df = df[start:end]
         df = df.sort_index(ascending=False)
         df.index = df.index.astype(str)

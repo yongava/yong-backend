@@ -233,6 +233,8 @@ def tradesum_set_recent(period: str='RECENT', start: str='2015-01-01', end: str=
     df['ForeignValNetSum'] = round(df['ForeignValNet'].astype('float').cumsum(),2)
     df['TradingValNetSum'] = round(df['TradingValNet'].astype('float').cumsum(),2)
     df['CustomerValNetSum']   = round(df['CustomerValNet'].astype('float').cumsum(),2)
+    
+    df = df.tail(1)
 
     df = df.sort_index(ascending=False).reset_index()
     df.date = df.date.astype(str)

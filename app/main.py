@@ -156,7 +156,7 @@ def recent_tradesum_tfex():
             if len(row) > 0:
                 l.append(row)
         df = pandas.DataFrame(l, columns=["name", "i_buy", "i_sell", "i_net", "f_buy", "f_sell", "f_net", "l_buy", "l_sell", "l_net", "total"])
-        result = {'date': datetime.today().strftime('%Y-%m-%d'),
+        result = {'date': datetime.datetime.today().strftime('%Y-%m-%d'),
                     'FundValBuy':     float(df.at[1,'i_buy'].replace(',','')),
                     'FundValSell':    float(df.at[1,'i_sell'].replace(',','')),
                     'FundValNet':     float(df.at[1,'i_net'].replace('+','').replace(',','')),

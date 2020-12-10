@@ -201,7 +201,7 @@ def tradesum_tfex(start: str='2016-01-01', end: str=datetime.datetime.today().st
         result = {"status":"FAILURE","message":f"{e}"}
 
     try:
-        mypath = pathlib.Path().absolute()
+        mypath = '/home/alpha/yong/yong-backend/app'
         df = pandas.read_csv(f'{mypath}/tfex-trade-history.csv', thousands=',')
         df = df.append(output,ignore_index=True)
         df = df.set_index('date')

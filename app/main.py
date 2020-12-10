@@ -166,6 +166,6 @@ def recent_tradesum_tfex():
                     'CustomerValBuy': float(df.at[1,'l_buy'].replace(',','')),
                     'CustomerValSell':float(df.at[1,'l_sell'].replace(',','')),
                     'CustomerValNet': float(df.at[1,'l_net'].replace('+','').replace(',',''))}
-    except:
-        result = {"status":"FAILURE","message":"Can't get data"}
+    except Exception as e:
+        result = {"status":"FAILURE","message":"Can't get data","hint":f"{e}"}
     return result

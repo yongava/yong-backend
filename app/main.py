@@ -187,7 +187,7 @@ def tradesum_set(start: str='2015-01-01', end: str=datetime.datetime.today().str
     df['FundValNetSum']    = round(df['FundValNet'].astype('float').cumsum(),2)
     df['ForeignValNetSum'] = round(df['ForeignValNet'].astype('float').cumsum(),2)
     df['TradingValNetSum'] = round(df['TradingValNet'].astype('float').cumsum(),2)
-    df['CustomerValSum']   = round(df['CustomerValNet'].astype('float').cumsum(),2)
+    df['CustomerValNetSum']   = round(df['CustomerValNet'].astype('float').cumsum(),2)
 
     df = df.reset_index()
     df.date = df.date.astype(str)
@@ -211,13 +211,13 @@ def tradesum_set_recent(period: str='RECENT', start: str='2015-01-01', end: str=
     df = df.set_index('date').sort_index()
 
     if period == 'MTD':
-        df[str(first_date_M):]
+        df = df[str(first_date_M):]
     elif period == 'QTD':
-        df[str(first_date_Q):]
+        df = df[str(first_date_Q):]
     elif  period == 'YTD':
-        df[str(first_date_Y):]
+        df = df[str(first_date_Y):]
     else:
-        df.tail(1)
+        df = df.tail(1)
 
     df['FundValBuySum']    = round(df['FundValBuy'].astype('float').cumsum(),2)
     df['ForeignValBuySum'] = round(df['ForeignValBuy'].astype('float').cumsum(),2)

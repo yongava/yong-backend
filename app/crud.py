@@ -109,7 +109,7 @@ def get_features(db: Session):
 
 def get_finance_by_sector(sector_id: int, feature_id: int, db: Session):
     resultproxy = db.get_bind().execute(f"""SELECT * FROM DBMarketWatchMaster.dbo.d_Finance as finance
-WHERE finance.SecurityID IN (
+    WHERE finance.SecurityID IN (
 	SELECT SecurityID FROM DBMarketWatchMaster.dbo.d_Compsec
 	JOIN DBMarketWatchMaster.dbo.SectorNo  ON (DBMarketWatchMaster.dbo.d_Compsec.SectorNo = DBMarketWatchMaster.dbo.SectorNo.SectorNumber)
 	WHERE DBMarketWatchMaster.dbo.d_Compsec.SectorNo = '{sector_id}' AND DBMarketWatchMaster.dbo.d_Compsec.ListingStatus = 'L'
@@ -124,5 +124,15 @@ WHERE finance.SecurityID IN (
 def get_businessinfo(symbol_name: str, db: Session):
     resultproxy = db.get_bind().execute(f"""SELECT * FROM DBMarketWatchMaster.dbo.d_Business 
 	WHERE SecuritySymbol = '{symbol_name}'""")
+    output = [{column: value for column, value in rowproxy.items()} for rowproxy in resultproxy]
+    return output
+
+def get_set_trade_summary(db: Session):
+    resultproxy = db.get_bind().execute(f"""SELECT SeqDate,
+    FundValBuy ,FundValSell, FundValBuy-FundValSell AS FundValNet,
+    ForeignValBuy ,ForeignValSell, ForeignValBuy-ForeignValSell AS ForeignValNet,
+    TradingValBuy ,TradingValSell, TradingValBuy-TradingValSell AS TradingValNet,
+    CustomerValBuy ,CustomerValSell, CustomerValBuy-CustomerValSell AS CustomerValNet
+    FROM DBMarketWatchMaster.dbo.d_CustomerHistory""")
     output = [{column: value for column, value in rowproxy.items()} for rowproxy in resultproxy]
     return output

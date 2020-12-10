@@ -169,3 +169,10 @@ def recent_tradesum_tfex():
     except Exception as e:
         result = {"status":"FAILURE","message":"Can't get data","hint":f"{e}"}
     return result
+
+@app.get("/tradesum_set")
+def tradesum_set(db: Session = Depends(get_db)):
+    result = crud.get_set_trade_summary(db)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Symbol not found")
+    return result

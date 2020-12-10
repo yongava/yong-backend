@@ -133,7 +133,11 @@ def get_set_trade_summary(start: str, end: str, db: Session):
                         ROUND(HighestPrice,2) AS SEThigh,
                         ROUND(LowestPrice,2) AS SETlow, 
                         ROUND(LastSalePrice,2) AS SETclose,
-                        FundValBuy-FundValSell AS FundValNet, 
+                        FundValBuy,FundValSell,
+                        ForeignValBuy,ForeignValSell,
+                        TradingValBuy,TradingValSell,
+                        CustomerValBuy,ForeignValSell,
+                        FundValBuy-FundValSell AS FundValNet,
                         ForeignValBuy-ForeignValSell AS ForeignValNet, 
                         TradingValBuy-TradingValSell AS TradingValNet, 
                         CustomerValBuy-CustomerValSell AS CustomerValNet

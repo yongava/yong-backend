@@ -179,18 +179,17 @@ def tradesum_set(start: str='2015-01-01', end: str=datetime.datetime.today().str
 
     if output is None:
         raise HTTPException(status_code=404, detail="Symbol not found")
-
-    return {"type":type(output),"output":output}
-
-    df = pandas.DataFrame(json.dumps(output))
-    df['FundValNetSum']    = round(df['FundValNet'].cumsum(),2)
-    df['ForeignValNetSum'] = round(df['ForeignValNet'].cumsum(),2)
-    df['TradingValNetSum'] = round(df['TradingValNet'].cumsum(),2)
-    df['CustomerValSum']   = round(df['CustomerValNet'].cumsum(),2)
-    df.date = pandas.to_datetime(df.date)
-    df.date = df.date.astype(str)
-    result = json.loads(df.to_json(orient='records',date_format ='ISO'))
-    return result
+    t = type(output)
+    return {"type":f"{t}"}
+    # df = pandas.DataFrame(json.dumps(output))
+    # df['FundValNetSum']    = round(df['FundValNet'].cumsum(),2)
+    # df['ForeignValNetSum'] = round(df['ForeignValNet'].cumsum(),2)
+    # df['TradingValNetSum'] = round(df['TradingValNet'].cumsum(),2)
+    # df['CustomerValSum']   = round(df['CustomerValNet'].cumsum(),2)
+    # df.date = pandas.to_datetime(df.date)
+    # df.date = df.date.astype(str)
+    # result = json.loads(df.to_json(orient='records',date_format ='ISO'))
+    # return result
 
 @app.get("/tradesum_tfex/")
 def tradesum_tfex(start: str='None', end: str=datetime.datetime.today().strftime('%Y-%m-%d'),db: Session = Depends(get_db)):

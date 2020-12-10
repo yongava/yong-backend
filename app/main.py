@@ -170,9 +170,11 @@ def recent_tradesum_tfex():
         result = {"status":"FAILURE","message":f"{e}"}
     return result
 
-@app.get("/tradesum_set")
-def tradesum_set(db: Session = Depends(get_db)):
-    result = crud.get_set_trade_summary(db)
+@app.get("/tradesum_set?{start}")
+def tradesum_set(start: str, db: Session = Depends(get_db)):
+    if start == None:
+        start = '2015-01-01'
+    result = crud.get_set_trade_summary(start, db)
     if result is None:
         raise HTTPException(status_code=404, detail="Symbol not found")
     return result

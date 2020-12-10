@@ -175,13 +175,22 @@ def recent_tradesum_tfex():
 
 @app.get("/tradesum_set/")
 def tradesum_set(start: str='2015-01-01', end: str=datetime.datetime.today().strftime('%Y-%m-%d'),db: Session = Depends(get_db)):
-    result = crud.get_set_trade_summary(start, end, db)
-    if result is None:
+    output = crud.get_set_trade_summary(start, end, db)
+    if output is None:
         raise HTTPException(status_code=404, detail="Symbol not found")
+    j = output.json()
+    df = pandas.DataFrame(j)
+    df['FundValNetSum']    = round(df['FundValNet'].cumsum(),2)
+    df['ForeignValNetSum'] = round(df['ForeignValNet'].cumsum(),2)
+    df['TradingValNetSum'] = round(df['TradingValNet'].cumsum(),2)
+    df['CustomerValSum']   = round(df['CustomerValNet'].cumsum(),2)
+    df.date = pandas.to_datetime(df.date)
+    df.date = df.date.astype(str)
+    result = json.loads(df.to_json(orient='records',date_format ='ISO'))
     return result
 
 @app.get("/tradesum_tfex/")
-def tradesum_tfex(start: str='2016-01-01', end: str=datetime.datetime.today().strftime('%Y-%m-%d'),db: Session = Depends(get_db)):
+def tradesum_tfex(start: str='None', end: str=datetime.datetime.today().strftime('%Y-%m-%d'),db: Session = Depends(get_db)):
     try:
         page = urllib.request.urlopen('https://marketdata.set.or.th/tfx/tfexinvestortypetrading.do?locale=th_TH')
         soup = BeautifulSoup(page, 'html.parser')
@@ -217,8 +226,14 @@ def tradesum_tfex(start: str='2016-01-01', end: str=datetime.datetime.today().st
         df.to_csv('tfex-trade-history.csv')
         with open("tfex-trade-history.csv", "rb") as data:
             blob.upload_blob(data, overwrite=True)
-        df = df[start:end]
-        df = df.sort_index(ascending=False)
+
+        if start == 'None':
+            df = df.sort_index(ascending=False)
+            df = df.head(300)
+        else:
+            df = df[start:end]
+            df = df.sort_index(ascending=False)
+
         df.index = df.index.astype(str)
         df = df.reset_index()
         result = json.loads(df.to_json(orient='records',date_format ='ISO'))

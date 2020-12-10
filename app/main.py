@@ -180,7 +180,7 @@ def tradesum_set(start: str='2015-01-01', end: str=datetime.datetime.today().str
     if output is None:
         raise HTTPException(status_code=404, detail="Symbol not found")
 
-    return [type(output),output]
+    return {"type":type(output),"output":output}
 
     df = pandas.DataFrame(json.dumps(output))
     df['FundValNetSum']    = round(df['FundValNet'].cumsum(),2)

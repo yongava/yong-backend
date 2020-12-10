@@ -127,12 +127,12 @@ def get_businessinfo(symbol_name: str, db: Session):
     output = [{column: value for column, value in rowproxy.items()} for rowproxy in resultproxy]
     return output
 
-def get_set_trade_summary(start: str, db: Session):
+def get_set_trade_summary(start: str, end: str, db: Session):
     resultproxy = db.get_bind().execute(f"""SELECT TOP 1000 SeqDate AS date,
     FundValBuy-FundValSell AS FundValNet,
     ForeignValBuy-ForeignValSell AS ForeignValNet,
     TradingValBuy-TradingValSell AS TradingValNet,
     CustomerValBuy-CustomerValSell AS CustomerValNet
-    FROM DBMarketWatchMaster.dbo.d_CustomerHistory AND SeqDate >= '{start}' ORDER BY SeqDate DESC""")
+    FROM DBMarketWatchMaster.dbo.d_CustomerHistory AND SeqDate >= '{start}' AND SeqDate <= '{end}' ORDER BY SeqDate DESC""")
     output = [{column: value for column, value in rowproxy.items()} for rowproxy in resultproxy]
     return output

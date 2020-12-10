@@ -5,6 +5,7 @@ RUN pip install --upgrade pip && \
     pip install --no-cache-dir BeautifulSoup4 && \
     pip install --no-cache-dir requests \ 
     pip install --no-cache-dir SQLAlchemy && \
-    pip install --no-cache-dir pymssql
+    pip install --no-cache-dir pymssql && \
+    pip install --no-cache-dir pathlib
 
 COPY ./app /app/app

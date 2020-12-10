@@ -133,7 +133,7 @@ def get_set_trade_summary(start: str, end: str, db: Session):
     ForeignValBuy-ForeignValSell AS ForeignValNet,
     TradingValBuy-TradingValSell AS TradingValNet,
     CustomerValBuy-CustomerValSell AS CustomerValNet
-    FROM DBMarketWatchMaster.dbo.d_CustomerHistory ORDER BY SeqDate DESC""")
-    #AND SeqDate >= '{start}' AND SeqDate <= '{end}'
+    FROM DBMarketWatchMaster.dbo.d_CustomerHistory WHERE SecurityNumber = 1024 AND SeqDate >= "'{start}''" AND SeqDate <= "'{end}'" ORDER BY SeqDate DESC""")
+
     output = [{column: value for column, value in rowproxy.items()} for rowproxy in resultproxy]
     return output

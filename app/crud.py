@@ -128,11 +128,11 @@ def get_businessinfo(symbol_name: str, db: Session):
     return output
 
 def get_set_trade_summary(db: Session):
-    resultproxy = db.get_bind().execute(f"""SELECT SeqDate,
-    FundValBuy ,FundValSell, FundValBuy-FundValSell AS FundValNet,
-    ForeignValBuy ,ForeignValSell, ForeignValBuy-ForeignValSell AS ForeignValNet,
-    TradingValBuy ,TradingValSell, TradingValBuy-TradingValSell AS TradingValNet,
-    CustomerValBuy ,CustomerValSell, CustomerValBuy-CustomerValSell AS CustomerValNet
+    resultproxy = db.get_bind().execute(f"""SELECT TOP 1000 SeqDate AS date,
+    FundValBuy-FundValSell AS FundValNet,
+    ForeignValBuy-ForeignValSell AS ForeignValNet,
+    TradingValBuy-TradingValSell AS TradingValNet,
+    CustomerValBuy-CustomerValSell AS CustomerValNet
     FROM DBMarketWatchMaster.dbo.d_CustomerHistory""")
     output = [{column: value for column, value in rowproxy.items()} for rowproxy in resultproxy]
     return output

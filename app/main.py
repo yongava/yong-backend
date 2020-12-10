@@ -141,3 +141,31 @@ def setmaiinfo():
         result = {"status":"FAILURE","message":"Can't get data"}
         
     return result
+
+@app.get("/recent_tradesum_tfex")
+def recent_tradesum_tfex():
+    try:
+        page = urllib.request.urlopen('https://marketdata.set.or.th/tfx/tfexinvestortypetrading.do?locale=th_TH')
+        soup = BeautifulSoup(page, 'html.parser')
+        textdate = [content.text.replace("\r","").replace("\n","").replace("  ","") for content in soup.findAll('caption',)][0]
+        table = soup.find('tbody',)
+        table_rows = table.findAll('tr')
+        l = []
+        for tr in table_rows:
+            td = tr.find_all('td')
+            row = [tr.text.replace(" ","").replace("\r","").replace("\n","") for tr in td]
+            if len(row) > 0:
+                l.append(row)
+        df = pandas.DataFrame(l, columns=["name", "i_buy", "i_sell", "i_net", "f_buy", "f_sell", "f_net", "l_buy", "l_sell", "l_net", "total"])
+        result = {'date': datetime.today().strftime('%Y-%m-%d'),
+                    'FundValBuy':     float(df.at[1,'i_buy'].replace(',','')),
+                    'FundValSell':    float(df.at[1,'i_sell'].replace(',','')),
+                    'FundValNet':     float(df.at[1,'i_net'].replace('+','').replace(',','')),
+                    'ForeignValBuy':  float(df.at[1,'f_buy'].replace(',','')),
+                    'ForeignValSell': float(df.at[1,'f_sell'].replace(',','')),
+                    'ForeignValNet':  float(df.at[1,'f_net'].replace('+','').replace(',','')),
+                    'CustomerValBuy': float(df.at[1,'l_buy'].replace(',','')),
+                    'CustomerValSell':float(df.at[1,'l_sell'].replace(',','')),
+                    'CustomerValNet': float(df.at[1,'l_net'].replace('+','').replace(',',''))}
+    except:
+        result = {"status":"FAILURE","message":"Can't get data"}

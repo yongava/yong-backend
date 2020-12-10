@@ -176,3 +176,42 @@ def tradesum_set(start: str='2015-01-01', end: str=datetime.datetime.today().str
     if result is None:
         raise HTTPException(status_code=404, detail="Symbol not found")
     return result
+
+@app.get("/tradesum_tfex/")
+def tradesum_tfex(start: str='2016-01-01', end: str=datetime.datetime.today().strftime('%Y-%m-%d'),db: Session = Depends(get_db)):
+    try:
+        page = urllib.request.urlopen('https://marketdata.set.or.th/tfx/tfexinvestortypetrading.do?locale=th_TH')
+        soup = BeautifulSoup(page, 'html.parser')
+        table = soup.find('tbody',)
+        table_rows = table.findAll('tr')
+        l = []
+        for tr in table_rows:
+            td = tr.find_all('td')
+            row = [tr.text.replace(" ","").replace("\r","").replace("\n","") for tr in td]
+            if len(row) > 0:
+                l.append(row)
+        df = pandas.DataFrame(l, columns=["name", "i_buy", "i_sell", "i_net", "f_buy", "f_sell", "f_net", "l_buy", "l_sell", "l_net", "total"])
+        output = {'date': datetime.datetime.today().strftime('%Y-%m-%d'),
+                    'FundValNet':     float(df.at[1,'i_net'].replace('+','').replace(',','')),
+                    'ForeignValNet':  float(df.at[1,'f_net'].replace('+','').replace(',','')),
+                    'CustomerValNet': float(df.at[1,'l_net'].replace('+','').replace(',',''))}
+    except Exception as e:
+        output = None
+        result = {"status":"FAILURE","message":f"{e}"}
+
+    try:
+        df = pandas.read_csv('tfex-trade-history.csv', thousands=',')
+        df = df.append(output,ignore_index=True)
+        df = df.set_index('date')
+        df.index = pandas.to_datetime(df.index)
+        df = df.apply(pandas.to_numeric)
+        df = df[~df.index.duplicated(keep='last')]
+        df.to_csv('tfex-trade-history.csv')
+        df = df[start:end]
+        df = df.sort_index(ascending=False)
+        df.index = df.index.astype(str)
+        df = df.reset_index()
+        result = df.to_json(orient='records',date_format ='ISO')
+    except Exception as e:
+        result = {"status":"FAILURE","message":f"{e}"}
+    return result

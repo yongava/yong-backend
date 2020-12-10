@@ -176,10 +176,13 @@ def recent_tradesum_tfex():
 @app.get("/tradesum_set/")
 def tradesum_set(start: str='2015-01-01', end: str=datetime.datetime.today().strftime('%Y-%m-%d'),db: Session = Depends(get_db)):
     output = crud.get_set_trade_summary(start, end, db)
-    print(type(output))
+
     if output is None:
         raise HTTPException(status_code=404, detail="Symbol not found")
-    df = pandas.DataFrame(output)
+
+    return [type(output):output]
+
+    df = pandas.DataFrame(json.dumps(output))
     df['FundValNetSum']    = round(df['FundValNet'].cumsum(),2)
     df['ForeignValNetSum'] = round(df['ForeignValNet'].cumsum(),2)
     df['TradingValNetSum'] = round(df['TradingValNet'].cumsum(),2)

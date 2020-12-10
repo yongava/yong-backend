@@ -216,8 +216,7 @@ def tradesum_tfex(start: str='2016-01-01', end: str=datetime.datetime.today().st
         df = df[~df.index.duplicated(keep='last')]
         df.to_csv('tfex-trade-history.csv')
         with open("tfex-trade-history.csv", "rb") as data:
-            blob.upload_blob(data)
-            
+            blob.upload_blob(data, overwrite=True)
         df = df[start:end]
         df = df.sort_index(ascending=False)
         df.index = df.index.astype(str)

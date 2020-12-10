@@ -1,12 +1,19 @@
 from typing import List
 
 from fastapi import Depends, FastAPI, HTTPException, Path
-from sqlalchemy.orm import Session
+from fastapi.middleware.cors import CORSMiddleware
 
 from . import crud, models, schemas
 from .database import SessionLocal, engine
+from sqlalchemy.orm import Session
+
+from bs4 import BeautifulSoup
+
 import datetime
-from fastapi.middleware.cors import CORSMiddleware
+import json
+import pandas
+import requests
+import urllib.request
 
 app = FastAPI()
 
@@ -48,20 +55,6 @@ def read_symbol_id(symbol_name: str = Path(..., title=" The name of the symbol t
         raise HTTPException(status_code=404, detail="Symbol not found")
     return result
 
-@app.get("/financial/")
-def read_financial_by_date(date: datetime.date, db: Session = Depends(get_db)):
-    result = crud.get_financial_by_date(db, date=date)
-    if result is None:
-        raise HTTPException(status_code=404, detail="Symbol not found")
-    return result
-
-@app.get("/fundamentalbyquote/")
-def read_fundamentalbyquote(db: Session = Depends(get_db)):
-    result = crud.get_fundamentalbyquote(db)
-    if result is None:
-        raise HTTPException(status_code=404, detail="not found")
-    return result
-    pass
 
 @app.get("/prices/{symbol_name}")
 def read_prices(symbol_name: str, db: Session = Depends(get_db)):
@@ -70,27 +63,12 @@ def read_prices(symbol_name: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Symbol not found")
     return result
 
-@app.get("/prices/pct_change/{symbol_name}")
+@app.get("/prices/recent/{symbol_name}")
 def read_prices_pct_change(symbol_name: str, db: Session = Depends(get_db)):
     result = crud.get_prices_pct_change(db=db, symbol_name=symbol_name)
     if result is None:
         raise HTTPException(status_code=404, detail="Symbol not found")
     return result
-    
-@app.get("/factsheet/{symbol_name}")
-def read_factsheet(symbol_name: str = Path(..., title=" The name of the symbol to get"), db: Session = Depends(get_db)):
-    result = crud.get_factsheet(db=db, symbol_name=symbol_name)
-    if result is None:
-        raise HTTPException(status_code=404, detail="Symbol not found")
-    return result
-
-@app.get("/factsheet/{symbol_name}/{feature_name}")
-def read_factsheet(symbol_name: str = Path(..., title=" The name of the symbol to get"), feature_name: str = Path(..., title=" The name of the symbol to get"), db: Session = Depends(get_db)):
-    result = crud.get_factsheet_with_feature(db=db, symbol_name=symbol_name, feature_name=feature_name)
-    if result is None:
-        raise HTTPException(status_code=404, detail="Symbol not found")
-    return result
-
 
 @app.get("/businessinfo/{symbol_name}")
 def read_businessinfo(symbol_name: str = Path(..., title=" The name of the symbol to get"), db: Session = Depends(get_db)):
@@ -120,13 +98,6 @@ def read_symbol_from_sector(sector_number: str,db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="not found")
     return result
 
-@app.get("/feature/")
-def read_get_features(db: Session = Depends(get_db)):
-    result = crud.get_features( db)
-    if result is None:
-        raise HTTPException(status_code=404, detail="not found")
-    return result
-
 @app.get("/finance_by_sector")
 def read_finance_by_sector(sector_id: int, feature_id: int, db: Session = Depends(get_db)):
     result = crud.get_finance_by_sector(sector_id, feature_id, db)
@@ -134,29 +105,39 @@ def read_finance_by_sector(sector_id: int, feature_id: int, db: Session = Depend
         raise HTTPException(status_code=404, detail="not found")
     return result
 
-@app.get("/finhub_to_unicorn")
-def map_finhub_to_unicorn(symbol, exchange):
-    country_code   = {
-    'BK':'BK',
-    'US':'US',
-    'HK':'HK',
-    'AX': 'AU',
-    'L': 'LSE',
-    'NS': 'NSE',
-    'SI': 'SG',
-    'VN': 'VN',
-    'SS': 'SHG',
-    'SZ': 'SHE',
-    'T': 'TSE',
-    'TO': 'TO'
-    }
-    exchange = country_code[exchange.upper()]
-
-    if exchange == 'HK':
-        symbol = str(symbol).zfill(4)
-        
-    if exchange == 'SZ':
-        symbol = str(symbol).zfill(6)
-        
-    return f'{symbol}.{exchange}'
+@app.get("/setmaiinfo")
+def setmaiinfo():
+    def set_info():
+        page = urllib.request.urlopen('https://marketdata.set.or.th/mkt/marketsummary.do?market=SET&language=en&country=US')
+        soup = BeautifulSoup(page, 'html.parser')
+        table_rows = soup.findAll('div', attrs={'class': 'row info'})
+        l = []
+        for tr in table_rows:
+            td = tr.find_all('div')
+            row = [tr.text.replace(" ","").replace("*","").replace("\r","").replace("\n","") for tr in td]
+            if len(row) > 0:
+                l.append(row)
+        df = pandas.DataFrame(l, columns=['name','value'])
+        df = df.set_index('name').drop('IndexPerformance')
+        return df.to_json().replace("\\","")
     
+    def mai_info():
+        page = urllib.request.urlopen('https://marketdata.set.or.th/mkt/marketsummary.do?market=mai&language=en&country=US')
+        soup = BeautifulSoup(page, 'html.parser')
+        table_rows = soup.findAll('div', attrs={'class': 'row info'})
+        l = []
+        for tr in table_rows:
+            td = tr.find_all('div')
+            row = [tr.text.replace(" ","").replace("*","").replace("\r","").replace("\n","") for tr in td]
+            if len(row) > 0:
+                l.append(row)
+        df = pandas.DataFrame(l, columns=['name','value'])
+        df = df.set_index('name').drop('IndexPerformance')
+        return df.to_json().replace("\\","")
+    try:
+        data = { 'set' : json.loads(set_info())['value'], 'mai' : json.loads(mai_info())['value'] }
+        result =  data
+    except:
+        result = {"status":"FAILURE","message":"Can't get data"}
+        
+    return result

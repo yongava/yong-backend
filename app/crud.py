@@ -157,7 +157,7 @@ def get_tfex_trade_summary(start: str, end: str, db: Session):
                         ROUND(LowestPrice,2) AS SETlow, 
                         ROUND(LastSalePrice,2) AS SETclose,
                         FundValBuy,FundValSell,
-                        ForeignValBuy,ForeignValSell
+                        ForeignValBuy,ForeignValSell,
                         CustomerValBuy,CustomerValSell,
                         FundValBuy-FundValSell AS FundValNet,
                         ForeignValBuy-ForeignValSell AS ForeignValNet,

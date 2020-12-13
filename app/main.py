@@ -246,7 +246,7 @@ def tradesum_set_recent(period: str='RECENT', start: str='2015-01-01', end: str=
 
 @app.get("/tradesum_tfex/")
 def tradesum_tfex(start: str='2015-01-01', end: str=datetime.datetime.today().strftime('%Y-%m-%d'),db: Session = Depends(get_db)):
-    output = crud.get_set_trade_summary(start, end, db)
+    output = crud.get_tfex_trade_summary(start, end, db)
 
     if output is None:
         raise HTTPException(status_code=404, detail="Symbol not found")
@@ -263,6 +263,62 @@ def tradesum_tfex(start: str='2015-01-01', end: str=datetime.datetime.today().st
     df.date = df.date.astype(str)
     result = json.loads(df.to_json(orient='records',date_format ='ISO'))
     return result
+
+
+@app.get("/tradesum_tfex/recent/{period}")
+def tradesum_tfex_recent(period: str='RECENT', start: str='2015-01-01', end: str=datetime.datetime.today().strftime('%Y-%m-%d'),db: Session = Depends(get_db)):
+    output = crud.get_tfex_trade_summary(start, end, db)
+
+    if output is None:
+        raise HTTPException(status_code=404, detail="Symbol not found")
+
+    date = datetime.datetime.now()
+    first_date_Q = datetime.datetime(date.year,3*((date.month-1)//3)+1,1).date()
+    first_date_M = datetime.datetime.today().replace(day=1).date()
+    first_date_Y = datetime.datetime.today().replace(day=1,month=1).date()
+
+    df = pandas.DataFrame(output)
+    df.date = pandas.to_datetime(df.date)
+    df = df.set_index('date').sort_index()
+
+    if period == 'MTD':
+        df = df[str(first_date_M):]
+    elif period == 'QTD':
+        df = df[str(first_date_Q):]
+    elif  period == 'YTD':
+        df = df[str(first_date_Y):]
+    else:
+        df = df.tail(1)
+
+    df['FundValBuySum']    = round(df['FundValBuy'].astype('float').cumsum(),2)
+    df['ForeignValBuySum'] = round(df['ForeignValBuy'].astype('float').cumsum(),2)
+    df['CustomerValBuySum']   = round(df['CustomerValBuy'].astype('float').cumsum(),2)
+
+    df['FundValSellSum']    = round(df['FundValSell'].astype('float').cumsum(),2)
+    df['ForeignValSellSum'] = round(df['ForeignValSell'].astype('float').cumsum(),2)
+    df['CustomerValSellSum']   = round(df['CustomerValSell'].astype('float').cumsum(),2)
+
+    df['FundValNetSum']    = round(df['FundValNet'].astype('float').cumsum(),2)
+    df['ForeignValNetSum'] = round(df['ForeignValNet'].astype('float').cumsum(),2)
+    df['CustomerValNetSum']   = round(df['CustomerValNet'].astype('float').cumsum(),2)
+    
+    df = df.tail(1)
+
+    df = df.sort_index(ascending=False).reset_index()
+    df.date = df.date.astype(str)
+
+    df = df[['date','FundValBuySum','FundValSellSum','FundValNetSum','ForeignValBuySum','ForeignValSellSum','ForeignValNetSum','CustomerValBuySum','CustomerValSellSum','CustomerValNetSum']]
+
+    result = json.loads(df.to_json(orient='records',date_format ='ISO'))
+    return result
+
+
+
+
+
+
+
+
 
 
 @app.get("/tradesum_tfex2/")

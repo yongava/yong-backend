@@ -244,9 +244,29 @@ def tradesum_set_recent(period: str='RECENT', start: str='2015-01-01', end: str=
     result = json.loads(df.to_json(orient='records',date_format ='ISO'))
     return result
 
-
 @app.get("/tradesum_tfex/")
-def tradesum_tfex(start: str='None', end: str=datetime.datetime.today().strftime('%Y-%m-%d'),db: Session = Depends(get_db)):
+def tradesum_tfex(start: str='2015-01-01', end: str=datetime.datetime.today().strftime('%Y-%m-%d'),db: Session = Depends(get_db)):
+    output = crud.get_set_trade_summary(start, end, db)
+
+    if output is None:
+        raise HTTPException(status_code=404, detail="Symbol not found")
+
+    df = pandas.DataFrame(output)
+    df.date = pandas.to_datetime(df.date)
+    df = df.set_index('date').sort_index()
+
+    df['FundValNetSum']    = round(df['FundValNet'].astype('float').cumsum(),2)
+    df['ForeignValNetSum'] = round(df['ForeignValNet'].astype('float').cumsum(),2)
+    df['CustomerValNetSum']   = round(df['CustomerValNet'].astype('float').cumsum(),2)
+
+    df = df.reset_index()
+    df.date = df.date.astype(str)
+    result = json.loads(df.to_json(orient='records',date_format ='ISO'))
+    return result
+
+
+@app.get("/tradesum_tfex2/")
+def tradesum_tfex2(start: str='None', end: str=datetime.datetime.today().strftime('%Y-%m-%d'),db: Session = Depends(get_db)):
     try:
         page = urllib.request.urlopen('https://marketdata.set.or.th/tfx/tfexinvestortypetrading.do?locale=th_TH')
         soup = BeautifulSoup(page, 'html.parser')

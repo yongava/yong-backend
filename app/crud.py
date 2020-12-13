@@ -148,3 +148,24 @@ def get_set_trade_summary(start: str, end: str, db: Session):
     resultproxy = db.get_bind().execute(query_string)
     output = [{column: value for column, value in rowproxy.items()} for rowproxy in resultproxy]
     return output
+
+
+def get_tfex_trade_summary(start: str, end: str, db: Session):
+    query_string = f"""SELECT TOP 300 WatchOCS_Date AS date, 
+                        ROUND(OpenPrice,2) AS SETopen,
+                        ROUND(HighestPrice,2) AS SEThigh,
+                        ROUND(LowestPrice,2) AS SETlow, 
+                        ROUND(LastSalePrice,2) AS SETclose,
+                        FundValBuy,FundValSell,
+                        ForeignValBuy,ForeignValSell
+                        CustomerValBuy,CustomerValSell,
+                        FundValBuy-FundValSell AS FundValNet,
+                        ForeignValBuy-ForeignValSell AS ForeignValNet,
+                        CustomerValBuy-CustomerValSell AS CustomerValNet
+                        FROM DBMarketWatchMaster.dbo.WatchOpenCloseSummary LEFT JOIN DBMarketWatchMaster.dbo.d_CustomerHistory ON WatchOCS_Date = SeqDate 
+                        WHERE DBMarketWatchMaster.dbo.WatchOpenCloseSummary.SecurityNumber = 1025 AND DBMarketWatchMaster.dbo.d_CustomerHistory.SecurityNumber = 1025
+                        AND WatchOCS_Date >= '{start}' AND WatchOCS_Date <= '{end}'
+                        ORDER BY WatchOCS_Date DESC"""
+    resultproxy = db.get_bind().execute(query_string)
+    output = [{column: value for column, value in rowproxy.items()} for rowproxy in resultproxy]
+    return output

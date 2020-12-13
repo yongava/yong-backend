@@ -163,7 +163,7 @@ def get_tfex_trade_summary(start: str, end: str, db: Session):
                         ForeignValBuy-ForeignValSell AS ForeignValNet,
                         CustomerValBuy-CustomerValSell AS CustomerValNet
                         FROM DBMarketWatchMaster.dbo.WatchOpenCloseSummary LEFT JOIN DBMarketWatchMaster.dbo.d_CustomerHistory ON WatchOCS_Date = SeqDate 
-                        WHERE DBMarketWatchMaster.dbo.WatchOpenCloseSummary.SecurityNumber = 1063 AND DBMarketWatchMaster.dbo.d_CustomerHistory.SecurityNumber = 1024
+                        WHERE DBMarketWatchMaster.dbo.WatchOpenCloseSummary.SecurityNumber = 1062 AND DBMarketWatchMaster.dbo.d_CustomerHistory.SecurityNumber = 1024
                         AND WatchOCS_Date >= '{start}' AND WatchOCS_Date <= '{end}'
                         ORDER BY WatchOCS_Date DESC"""
     resultproxy = db.get_bind().execute(query_string)

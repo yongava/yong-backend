@@ -155,9 +155,15 @@ def get_tfex_trade_summary(start: str, end: str, db: Session):
                         ROUND(OpenPrice,2) AS SETopen,
                         ROUND(HighestPrice,2) AS SEThigh,
                         ROUND(LowestPrice,2) AS SETlow, 
-                        ROUND(LastSalePrice,2) AS SETclose
-                        FROM DBMarketWatchMaster.dbo.WatchOpenCloseSummary
-                        WHERE DBMarketWatchMaster.dbo.WatchOpenCloseSummary.SecurityNumber = 1063
+                        ROUND(LastSalePrice,2) AS SETclose,
+                        FundValBuy,FundValSell,
+                        ForeignValBuy,ForeignValSell
+                        CustomerValBuy,CustomerValSell,
+                        FundValBuy-FundValSell AS FundValNet,
+                        ForeignValBuy-ForeignValSell AS ForeignValNet,
+                        CustomerValBuy-CustomerValSell AS CustomerValNet
+                        FROM DBMarketWatchMaster.dbo.WatchOpenCloseSummary LEFT JOIN DBMarketWatchMaster.dbo.d_CustomerHistory ON WatchOCS_Date = SeqDate 
+                        WHERE DBMarketWatchMaster.dbo.WatchOpenCloseSummary.SecurityNumber = 1063 AND DBMarketWatchMaster.dbo.d_CustomerHistory.SecurityNumber = 1024
                         AND WatchOCS_Date >= '{start}' AND WatchOCS_Date <= '{end}'
                         ORDER BY WatchOCS_Date DESC"""
     resultproxy = db.get_bind().execute(query_string)

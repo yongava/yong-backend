@@ -244,8 +244,8 @@ def tradesum_set_recent(period: str='RECENT', start: str='2015-01-01', end: str=
     result = json.loads(df.to_json(orient='records',date_format ='ISO'))
     return result
 
-@app.get("/tradesum_tfex/")
-def tradesum_tfex(start: str='2015-01-01', end: str=datetime.datetime.today().strftime('%Y-%m-%d'),db: Session = Depends(get_db)):
+@app.get("/tradesum_tfex_db/")
+def tradesum_tfex_db(start: str='2015-01-01', end: str=datetime.datetime.today().strftime('%Y-%m-%d'),db: Session = Depends(get_db)):
     output = crud.get_tfex_trade_summary(start, end, db)
 
     if output is None:
@@ -265,8 +265,8 @@ def tradesum_tfex(start: str='2015-01-01', end: str=datetime.datetime.today().st
     return result
 
 
-@app.get("/tradesum_tfex/recent/{period}")
-def tradesum_tfex_recent(period: str='RECENT', start: str='2015-01-01', end: str=datetime.datetime.today().strftime('%Y-%m-%d'),db: Session = Depends(get_db)):
+@app.get("/tradesum_tfex_db/recent/{period}")
+def tradesum_tfex_db_recent(period: str='RECENT', start: str='2015-01-01', end: str=datetime.datetime.today().strftime('%Y-%m-%d'),db: Session = Depends(get_db)):
     output = crud.get_tfex_trade_summary(start, end, db)
 
     if output is None:
@@ -313,8 +313,8 @@ def tradesum_tfex_recent(period: str='RECENT', start: str='2015-01-01', end: str
     return result
 
 
-@app.get("/tradesum_tfex2/")
-def tradesum_tfex2(start: str='2015-01-01', end: str=datetime.datetime.today().strftime('%Y-%m-%d'),db: Session = Depends(get_db)):
+@app.get("/tradesum_tfex/")
+def tradesum_tfex(start: str='2015-01-01', end: str=datetime.datetime.today().strftime('%Y-%m-%d'),db: Session = Depends(get_db)):
     def get_crawl():
         try:
             page = urllib.request.urlopen('https://marketdata.set.or.th/tfx/tfexinvestortypetrading.do?locale=th_TH')
@@ -365,5 +365,82 @@ def tradesum_tfex2(start: str='2015-01-01', end: str=datetime.datetime.today().s
     df['CustomerValNetSum']   = round(df['CustomerValNet'].astype('float').cumsum(),2)
     df = df.sort_index(ascending=True).reset_index()
     df.date = df.date.astype(str)
+    result = json.loads(df.to_json(orient='records',date_format ='ISO'))
+    return result
+
+
+@app.get("/tradesum_tfex/recent/{period}")
+def tradesum_tfex_recent(period: str='RECENT', start: str='2015-01-01', end: str=datetime.datetime.today().strftime('%Y-%m-%d'),db: Session = Depends(get_db)):
+    def get_crawl():
+        try:
+            page = urllib.request.urlopen('https://marketdata.set.or.th/tfx/tfexinvestortypetrading.do?locale=th_TH')
+            soup = BeautifulSoup(page, 'html.parser')
+            table = soup.find('tbody',)
+            table_rows = table.findAll('tr')
+            l = []
+            for tr in table_rows:
+                td = tr.find_all('td')
+                row = [tr.text.replace(" ","").replace("\r","").replace("\n","") for tr in td]
+                if len(row) > 0:
+                    l.append(row)
+            df = pandas.DataFrame(l, columns=["name", "i_buy", "i_sell", "i_net", "f_buy", "f_sell", "f_net", "l_buy", "l_sell", "l_net", "total"])
+            output = {'date': datetime.datetime.today().strftime('%Y-%m-%d'),
+                        'FundValNet':     float(df.at[1,'i_net'].replace('+','').replace(',','')),
+                        'ForeignValNet':  float(df.at[1,'f_net'].replace('+','').replace(',','')),
+                        'CustomerValNet': float(df.at[1,'l_net'].replace('+','').replace(',',''))}
+        except:
+            return pandas.DataFrame()
+
+        connection_string = "DefaultEndpointsProtocol=https;AccountName=alpharesearch;AccountKey=v1zCpiYiSgIzXgb58YI9tA3ebi1OtyoMeA6cu2vFzmk94zxC4DepNWlT8+dpsNELDFq+0owUrY1gehvCzSFZ6A==;EndpointSuffix=core.windows.net"
+        blob = BlobClient.from_connection_string(conn_str=connection_string, container_name="yongcontainer", blob_name="my_csv")
+        with open("tfex-trade-history.csv", "wb") as my_blob:
+            blob_data = blob.download_blob()
+            blob_data.readinto(my_blob)
+        df = pandas.read_csv('tfex-trade-history.csv', thousands=',')
+        df = df.append(output,ignore_index=True)
+        df = df.set_index('date')
+        df.index = pandas.to_datetime(df.index)
+        df = df.apply(pandas.to_numeric)
+        df = df[~df.index.duplicated(keep='last')]
+        df.to_csv('tfex-trade-history.csv')
+        with open("tfex-trade-history.csv", "rb") as data:
+            blob.upload_blob(data, overwrite=True)
+        return df
+
+    output = crud.get_tfex_trade_summary(start, end, db)
+    if output is None:
+        raise HTTPException(status_code=404, detail="Symbol not found")
+    df = pandas.DataFrame(output)
+    df.date = pandas.to_datetime(df.date)
+    df = df.set_index('date').sort_index()
+    df = df.drop(['FundValBuy','FundValSell','FundValNet','ForeignValBuy','ForeignValSell','ForeignValNet','CustomerValBuy','CustomerValSell','CustomerValNet'],axis=1)
+    upd_df = get_crawl()
+    df = df.join(upd_df, how='left')
+
+    date = datetime.datetime.now()
+    first_date_Q = datetime.datetime(date.year,3*((date.month-1)//3)+1,1).date()
+    first_date_M = datetime.datetime.today().replace(day=1).date()
+    first_date_Y = datetime.datetime.today().replace(day=1,month=1).date()
+
+    if period == 'MTD':
+        df = df[str(first_date_M):]
+    elif period == 'QTD':
+        df = df[str(first_date_Q):]
+    elif  period == 'YTD':
+        df = df[str(first_date_Y):]
+    else:
+        df = df.tail(1)
+
+    df['FundValNetSum']    = round(df['FundValNet'].astype('float').cumsum(),2)
+    df['ForeignValNetSum'] = round(df['ForeignValNet'].astype('float').cumsum(),2)
+    df['CustomerValNetSum']   = round(df['CustomerValNet'].astype('float').cumsum(),2)
+    
+    df = df.tail(1)
+
+    df = df.sort_index(ascending=False).reset_index()
+    df.date = df.date.astype(str)
+
+    df = df[['date','FundValNetSum','ForeignValNetSum','CustomerValNetSum']]
+
     result = json.loads(df.to_json(orient='records',date_format ='ISO'))
     return result

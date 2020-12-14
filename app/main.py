@@ -313,37 +313,40 @@ def tradesum_tfex_recent(period: str='RECENT', start: str='2015-01-01', end: str
     return result
 
 
-
-
-
-
-
-
-
-
 @app.get("/tradesum_tfex2/")
 def tradesum_tfex2(start: str='None', end: str=datetime.datetime.today().strftime('%Y-%m-%d'),db: Session = Depends(get_db)):
-    try:
-        page = urllib.request.urlopen('https://marketdata.set.or.th/tfx/tfexinvestortypetrading.do?locale=th_TH')
-        soup = BeautifulSoup(page, 'html.parser')
-        table = soup.find('tbody',)
-        table_rows = table.findAll('tr')
-        l = []
-        for tr in table_rows:
-            td = tr.find_all('td')
-            row = [tr.text.replace(" ","").replace("\r","").replace("\n","") for tr in td]
-            if len(row) > 0:
-                l.append(row)
-        df = pandas.DataFrame(l, columns=["name", "i_buy", "i_sell", "i_net", "f_buy", "f_sell", "f_net", "l_buy", "l_sell", "l_net", "total"])
-        output = {'date': datetime.datetime.today().strftime('%Y-%m-%d'),
-                    'FundValNet':     float(df.at[1,'i_net'].replace('+','').replace(',','')),
-                    'ForeignValNet':  float(df.at[1,'f_net'].replace('+','').replace(',','')),
-                    'CustomerValNet': float(df.at[1,'l_net'].replace('+','').replace(',',''))}
-    except Exception as e:
-        output = None
-        result = {"status":"FAILURE","message":f"{e}"}
 
-    try:
+    def get_raw():
+        output = crud.get_tfex_trade_summary(start, end, db)
+
+        if output is None:
+            raise HTTPException(status_code=404, detail="Symbol not found")
+
+        df = pandas.DataFrame(output)
+        df.date = pandas.to_datetime(df.date)
+        df = df.set_index('date').sort_index()
+        return df
+
+    def get_crawl():
+        try:
+            page = urllib.request.urlopen('https://marketdata.set.or.th/tfx/tfexinvestortypetrading.do?locale=th_TH')
+            soup = BeautifulSoup(page, 'html.parser')
+            table = soup.find('tbody',)
+            table_rows = table.findAll('tr')
+            l = []
+            for tr in table_rows:
+                td = tr.find_all('td')
+                row = [tr.text.replace(" ","").replace("\r","").replace("\n","") for tr in td]
+                if len(row) > 0:
+                    l.append(row)
+            df = pandas.DataFrame(l, columns=["name", "i_buy", "i_sell", "i_net", "f_buy", "f_sell", "f_net", "l_buy", "l_sell", "l_net", "total"])
+            output = {'date': datetime.datetime.today().strftime('%Y-%m-%d'),
+                        'FundValNet':     float(df.at[1,'i_net'].replace('+','').replace(',','')),
+                        'ForeignValNet':  float(df.at[1,'f_net'].replace('+','').replace(',','')),
+                        'CustomerValNet': float(df.at[1,'l_net'].replace('+','').replace(',',''))}
+        except:
+            return pandas.DataFrame()
+
         connection_string = "DefaultEndpointsProtocol=https;AccountName=alpharesearch;AccountKey=v1zCpiYiSgIzXgb58YI9tA3ebi1OtyoMeA6cu2vFzmk94zxC4DepNWlT8+dpsNELDFq+0owUrY1gehvCzSFZ6A==;EndpointSuffix=core.windows.net"
         blob = BlobClient.from_connection_string(conn_str=connection_string, container_name="yongcontainer", blob_name="my_csv")
         with open("tfex-trade-history.csv", "wb") as my_blob:
@@ -358,17 +361,13 @@ def tradesum_tfex2(start: str='None', end: str=datetime.datetime.today().strftim
         df.to_csv('tfex-trade-history.csv')
         with open("tfex-trade-history.csv", "rb") as data:
             blob.upload_blob(data, overwrite=True)
+        return df
 
-        if start == 'None':
-            df = df.sort_index(ascending=False)
-            df = df.head(300)
-        else:
-            df = df[start:end]
-            df = df.sort_index(ascending=False)
-
-        df.index = df.index.astype(str)
-        df = df.reset_index()
-        result = json.loads(df.to_json(orient='records',date_format ='ISO'))
-    except Exception as e:
-        result = {"status":"FAILURE","message":f"{e}"}
+    df = get_raw()
+    upd_df = get_crawl()
+    df = df.join(upd_df, how='left')
+    df['FundValNetSum']    = round(df['FundValNet'].astype('float').cumsum(),2)
+    df['ForeignValNetSum'] = round(df['ForeignValNet'].astype('float').cumsum(),2)
+    df['CustomerValNetSum']   = round(df['CustomerValNet'].astype('float').cumsum(),2)
+    result = json.loads(df.to_json(orient='records',date_format ='ISO'))
     return result

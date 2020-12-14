@@ -315,18 +315,6 @@ def tradesum_tfex_recent(period: str='RECENT', start: str='2015-01-01', end: str
 
 @app.get("/tradesum_tfex2/")
 def tradesum_tfex2(start: str='None', end: str=datetime.datetime.today().strftime('%Y-%m-%d'),db: Session = Depends(get_db)):
-
-    def get_raw():
-        output = crud.get_tfex_trade_summary(start, end, db)
-
-        if output is None:
-            raise HTTPException(status_code=404, detail="Symbol not found")
-
-        df = pandas.DataFrame(output)
-        df.date = pandas.to_datetime(df.date)
-        df = df.set_index('date').sort_index()
-        return df
-
     def get_crawl():
         try:
             page = urllib.request.urlopen('https://marketdata.set.or.th/tfx/tfexinvestortypetrading.do?locale=th_TH')
@@ -363,7 +351,12 @@ def tradesum_tfex2(start: str='None', end: str=datetime.datetime.today().strftim
             blob.upload_blob(data, overwrite=True)
         return df
 
-    df = get_raw()
+    output = crud.get_tfex_trade_summary(start, end, db)
+    if output is None:
+        raise HTTPException(status_code=404, detail="Symbol not found")
+    df = pandas.DataFrame(output)
+    df.date = pandas.to_datetime(df.date)
+    df = df.set_index('date').sort_index()
     upd_df = get_crawl()
     df = df.join(upd_df, how='left')
     df['FundValNetSum']    = round(df['FundValNet'].astype('float').cumsum(),2)

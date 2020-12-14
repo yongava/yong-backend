@@ -357,6 +357,7 @@ def tradesum_tfex2(start: str='2015-01-01', end: str=datetime.datetime.today().s
     df = pandas.DataFrame(output)
     df.date = pandas.to_datetime(df.date)
     df = df.set_index('date').sort_index()
+    df = df.drop(['FundValNet','ForeignValNet','CustomerValNet'],axis=1)
     upd_df = get_crawl()
     df = df.join(upd_df, how='left')
     df['FundValNetSum']    = round(df['FundValNet'].astype('float').cumsum(),2)

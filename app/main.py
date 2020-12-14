@@ -314,7 +314,7 @@ def tradesum_tfex_recent(period: str='RECENT', start: str='2015-01-01', end: str
 
 
 @app.get("/tradesum_tfex2/")
-def tradesum_tfex2(start: str='None', end: str=datetime.datetime.today().strftime('%Y-%m-%d'),db: Session = Depends(get_db)):
+def tradesum_tfex2(start: str='2015-01-01', end: str=datetime.datetime.today().strftime('%Y-%m-%d'),db: Session = Depends(get_db)):
     def get_crawl():
         try:
             page = urllib.request.urlopen('https://marketdata.set.or.th/tfx/tfexinvestortypetrading.do?locale=th_TH')

@@ -363,7 +363,7 @@ def tradesum_tfex2(start: str='2015-01-01', end: str=datetime.datetime.today().s
     df['FundValNetSum']    = round(df['FundValNet'].astype('float').cumsum(),2)
     df['ForeignValNetSum'] = round(df['ForeignValNet'].astype('float').cumsum(),2)
     df['CustomerValNetSum']   = round(df['CustomerValNet'].astype('float').cumsum(),2)
-    df = df.sort_index(ascending=False).reset_index()
+    df = df.sort_index(ascending=True).reset_index()
     df.date = df.date.astype(str)
     result = json.loads(df.to_json(orient='records',date_format ='ISO'))
     return result

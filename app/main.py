@@ -444,3 +444,113 @@ def tradesum_tfex_recent(period: str='RECENT', start: str='2015-01-01', end: str
 
     result = json.loads(df.to_json(orient='records',date_format ='ISO'))
     return result
+
+@app.get("/marketbreadth/")
+def marketbreadth():
+    pandas.options.display.float_format = '{:,.2f}'.format
+    def get_is_ath(series, period = 260):
+        period = 260
+        ath_threshold = series.shift(1).rolling(period).max()
+        is_ath = (series >= ath_threshold).astype(int)
+        return is_ath
+
+    def get_is_atl(series, period = 260):
+        atl_threshold = series.shift(1).rolling(period).min()
+        is_atl = (series <= atl_threshold).astype(int)
+        return is_atl
+
+    def get_above_is_above_sma(series, period = 100):
+        sma_threshold = series.shift(1).rolling(period).mean()
+        is_above_sma = (series >= sma_threshold).astype(int)
+        return is_above_sma
+
+    def get_above_is_below_sma(series, period = 100):
+        sma_threshold = series.shift(1).rolling(period).mean()
+        is_below_sma = (series <  sma_threshold).astype(int)
+        return is_below_sma
+
+    SET    = ['7UP','A','AAV','ABPIF','ACC','ACE','ADVANC','AEC','AEONTS','AFC','AH','AHC','AI','AIMCG','AIMIRT','AIT','AJ','AJA','AKR','ALLA','ALT','ALUCON','AMANAH','AMARIN','AMATA','AMATAR','','AMC','ANAN','AOT','AP','APCO','APCS','APEX','APURE','AQ','AQUA','AS','ASAP','ASEFA','ASIA','ASIAN','ASIMAR','ASK','ASP','AWC','AYUD','B52','B','BA','BAFS','BAM','BANPU','BAT-3K','BAY','BBL','BCH','BCP','BCPG','BCT','BDMS','BEAUTY','BEC','BEM','BFIT','BGC','BGRIM','BH','BIG','BJC','BJCHI','BKD','BKER','BKI','BKKCP','BLA','BLAND','BLISS','BOFFICE','BPP','BR','BROCK','BRR','BRRGIF','BSBM','BTNC','BTS','BTSGIF','BUI','BWG','B-WORK','CBG','CCET','CCP','CEN','CENTEL','CFRESH','CGD','CGH','CHARAN','CHG','CHOTI','CI','CIMBT','CITY','CK','CKP','CM','CMAN','CMR','CNT','COL','COM7','COTTO','CPALL','CPF','CPH','CPI','CPL','CPN','CPNCG','CPNREIT','CPT','CPTGF','CPW','CRANE','CRC','CSC','CSP','CSR','CSS','CTARAF','CTW','CWT','DCC','DCON','DDD','DELTA','DEMCO','DIF','DOHOME','DREIT','DRT','DTAC','DTC','DTCI','EA','EASON','EASTW','ECL','EE','EGATIF','EGCO','EKH','EMC','EP','EPG','ERW','ERWPF','ESSO','ESTAR','EVER','F&D','FANCY','FE','FMT','FN','FNS','FORTH','FPT','FSS','FTE','FTREIT','FUTUREPF','GAHREIT','GBX','GC','GEL','GENCO','GFPT','GGC','GIFT','GJS','GL','GLAND','GLOBAL','GLOCON','GOLD','GOLDPF','GPI','GPSC','GRAMMY','GRAND','GREEN','GSTEEL','GULF','GUNKUL','GVREIT','GYT','HANA','HFT','HMPRO','HPF','HREIT','HTC','HTECH','HUMAN','ICC','ICHI','IFEC','IFS','IHL','III','ILINK','ILM','IMPACT','INET','INGRS','INOX','INSURE','INTUCH','IRC','IRPC','IT','ITD','IVL','J','JAS','JASIF','JCK','JCT','JMART','JMT','JTS','JUTHA','JWD','KAMART','KBANK','KBS','KC','KCAR','KCE','KDH','KGI','KKC','KKP','KPNPF','KSL','KTB','KTC','KTIS','KWC','KWG','KYE','L&E','LALIN','LANNA','LEE','LH','LHFG','LHHOTEL','LHK','LHPF','LHSC','LOXLEY','LPH','LPN','LRH','LST','LUXF','M','MACO','MAJOR','MAKRO','MALEE','MANRIN','MATCH','MATI','MAX','MBK','MBKET','MC','M-CHAI','MCOT','MCS','MDX','MEGA','METCO','MFC','MFEC','MIDA','M-II','MILL','MINT','MIPF','MIT','MJD','MJLF','MK','ML','MNIT','MNIT2','MNRF','MODERN','MONO','M-PAT','MPIC','MSC','M-STOR','MTC','MTI','NC','NCH','NEP','NER','NEW','NEX','NFC','NKI','NMG','NNCL','NOBLE','NOK','NSI','NTV','NVD','NUSA','NWR','NYT','OCC','OGC','OHTL','OISHI','ORI','OSP','PACE','PAE','PAF','PAP','PATO','PB','PCSGH','PDI','PDJ','PE','PERM','PF','PG','PK','PL','PLANB','PLAT','PLE','PM','PMTA','POLAR','POPF','PORT','POST','PPF','PPP','PPPM','PR9','PRAKIT','PREB','PRECHA','PRIME','PRG','PRIN','PRINC','PRM','PRO','PSH','PSL','PT','PTG','PTL','PTT','PTTEP','PTTGC','PYLON','Q-CON','QH','QHHR','QHOP','QHPF','RAM','RATCH','RBF','RCI','RCL','RICH','RICHY','RJH','RML','ROCK','ROH','ROJNA','RPC','RPH','RS','RSP','S','S & J','S11','SABINA','SAM','SAMART','SAMCO','SAMTEL','SAPPE','SAT','SAUCE','SAWAD','SAWANG','SBPF','SC','SCB','SCC','SCCC','SCG','SCI','SCN','SCP','SDC','SEAFCO','SE-ED','SEG','SENA','SF','SFLEX','SFP','SGP','SHANG','SHR','SHREIT','SIAM','SINGER','SIRI','SIRIP','SIS','SISB','SITHAI','SKE','SKN','SKR','SLP','SMIT','SMK','SMPC','SMT','SNC','SNP','SOLAR','SORKON','SPACK','SPALI','SPC','SPCG','SPF','SPG','SPI','SPRC','SPRIME','SQ','SRICHA','SRIPANWA','SSC','SSF','SSI','SSP','SSPF','SSSC','SST','SSTRT','STA','STANLY','STARK','STEC','STHAI','STPI','SUC','SUPER','SUPEREIF','SUSCO','SUTHA','SVH','SVI','SVOA','SYMC','SYNEX','SYNTEC','TAE','TASCO','TBSP','TC','TCAP','TCC','TCCC','TCJ','TCMC','TCOAT','TEAM','TEAMG','TFFIF','TFG','TFI','TFMAMA','TGPRO','TH','THAI','THANI','THCOM','THE','THG','THIP','THL','THRE','THREL','TIF1','TIP','TIPCO','TISCO','TIW','TK','TKN','TKS','TKT','TLGF','TLHPF','TMB','TMD','TMT','TNITY','TNL','TNPC','TNPF','TNR','TOA','TOG','TOP','TOPP','TPA','TPBI','TPCORP','TPIPL','TPIPP','TPOLY','TPP','TPRIME','TQM','TR','TRC','TRITN','TRU','TRUBB','TRUE','TSC','TSE','TSI','TSR','TSTE','TSTH','TTA','TTCL','TTI','TTLPF','TTT','TTW','TU','TU-PF','TVI','TVO','TWP','TWPC','TWZ','TYCN','U','UAC','UMI','UNIQ','UOBKH','UP','UPF','UPOIC','URBNPF','UT','UTP','UV','UVAN','VARO','VGI','VIBHA','VIH','VNG','VNT','VPO','VRANDA','W','WACOAL','WAVE','WG','WHA','WHABT','WHART','WHAUP','WICE','WIIK','WIN','WORK','WP','WPH','YCI','ZEN','ZMICO']
+    SET100 = ["AAV","ACE","ADVANC","AEONTS","AMATA","AOT","AP","AWC","BANPU","BBL","BCH","BCP","BCPG","BDMS","BEC","BEM","BGRIM","BH","BJC","BPP","BTS","CBG","CENTEL","CHG","CK","CKP","COM7","CPALL","CPF","CPN","CRC","DOHOME","DTAC","EA","EGCO","EPG","ERW","ESSO","GFPT","GLOBAL","GPSC","GULF","GUNKUL","HANA","HMPRO","INTUCH","IRPC","IVL","JAS","JMT","KBANK","KCE","KKP","KTB","KTC","LH","MAJOR","MEGA","MINT","MTC","ORI","OSP","PLANB","PRM","PSH","PTG","PTT","PTTEP","PTTGC","QH","RATCH","RBF","RS","SAWAD","SCB","SCC","SGP","SIRI","SPALI","SPRC","STA","STEC","SUPER","TASCO","TCAP","THANI","TISCO","TKN","TMB","TOA","TOP","TPIPP","TQM","TRUE","TTW","TU","TVO","VGI","WHA","WHAUP"]
+    SET50  = ["ADVANC","AOT","AWC","BBL","BDMS","BEM","BGRIM","BH","BJC","BPP","BTS","CBG","CPALL","CPF","CPN","CRC","DTAC","EA","EGCO","GLOBAL","GPSC","GULF","HMPRO","INTUCH","IRPC","IVL","KBANK","KTB","KTC","LH","MINT","MTC","OSP","PTT","PTTEP","PTTGC","RATCH","SAWAD","SCB","SCC","TCAP","TISCO","TMB","TOA","TOP","TRUE","TTW","TU","VGI","WHA"]
+    MAI    = ["ABICO","AU","JCKH","KASET","MM","SUN","TACC","TMILL","XO","BGT","BIZ","DOD","ECF","HPT","IP","JUBILE","MOONG","NPK","OCEAN","TM","ACAP","AF","AIRA","ASN","BROOK","CHAYO","GCAP","LIT","MITSIB","SGF","2S","ADB","BM","CHO","CHOW","CIG","COLOR","CPR","FPI","GTB","KCM","KUMWEL","KWM","MBAX","MGT","NDR","PDG","PIMO","PJW","PPM","RWI","SALEE","SANKO","SELIC","SWC","TMC","TMI","TMW","TPAC","TPLAS","UBIS","UEC","UKEM","UREKA","YUASA","ZIGA","ALL","ARIN","ARROW","BC","BSM","BTW","CAZ","CHEWA","CMC","CRD","DIMET","FLOYD","HYDRO","JSP","K","KUN","META","PPS","PROUD","SMART","STAR","STC","STI","T","TAPAC","THANA","TIGER","TITLE","ABM","AGE","AIE","PSTC","QTC","SAAM","SEAOIL","SR","TAKUNI","TPCH","TRT","UMS","UPA","UWC","A5","AKP","AMA","ARIP","ATP30","AUCT","BOL","CMO","D","DCORP","EFORL","ETE","FSMART","FVC","GSC","HARN","IMH","JKN","KIAT","KOOL","LDC","MORE","MPG","MVP","NBC","NCL","NEWS","NINE","OTO","PHOL","PICO","QLT","RP","SE","SLM","SONIC","SPA","THMUI","TNDT","TNH","TNP","TSF","TVD","TVT","VL","WINNER","YGG","APP","COMAN","ICN","IIG","INSET","IRCP","ITEL","NETBAY","PLANET","SICT","SIMAT","SKY","SPVI","TPS","VCOM"]
+
+    INDEX_df       = pandas.read_csv('https://alpharesearch.blob.core.windows.net/yongcontainer/INDEX.csv').set_index('DATE')
+    INDEX_df.index = pandas.to_datetime(INDEX_df.index)
+
+    SET_df         = INDEX_df[['SET_OPEN','SET_HIGH','SET_LOW','SET_CLOSE']]
+    SET_df.columns = ['OPEN','HIGH','LOW','CLOSE']
+    SET100_df      = INDEX_df[['SET100_OPEN','SET100_HIGH','SET100_LOW','SET100_CLOSE']]
+    SET100_df.columns = ['OPEN','HIGH','LOW','CLOSE']
+    SET50_df       = INDEX_df[['SET50_OPEN','SET50_HIGH','SET50_LOW','SET50_CLOSE']]
+    SET50_df.columns = ['OPEN','HIGH','LOW','CLOSE']
+    MAI_df         = INDEX_df[['MAI_OPEN','MAI_HIGH','MAI_LOW','MAI_CLOSE']]
+    MAI_df.columns = ['OPEN','HIGH','LOW','CLOSE']
+        
+    prices_df = pandas.read_csv('https://alpharesearch.blob.core.windows.net/yongcontainer/STOCKS.csv').set_index('DATE')
+    prices_df.index = pandas.to_datetime(prices_df.index)
+
+    vol_df = pandas.read_csv('https://alpharesearch.blob.core.windows.net/yongcontainer/STOCKS_VOL.csv').set_index('DATE')
+    vol_df.index = pandas.to_datetime(vol_df.index)
+
+    val_df = pandas.read_csv('https://alpharesearch.blob.core.windows.net/yongcontainer/STOCKS_VAL.csv').set_index('DATE')
+    val_df.index = pandas.to_datetime(val_df.index)
+
+    stock_amount = len(prices_df.columns)
+
+    is_ath_df = pandas.DataFrame(index=prices_df.index)
+    is_atl_df = pandas.DataFrame(index=prices_df.index)
+    above_sma_df = pandas.DataFrame(index=prices_df.index)
+    below_sma_df = pandas.DataFrame(index=prices_df.index)
+
+    for symbol in prices_df.columns:
+        is_ath_df[symbol] = get_is_ath(prices_df[symbol])
+        is_atl_df[symbol] = get_is_atl(prices_df[symbol])
+        above_sma_df[symbol] = get_above_is_above_sma(prices_df[symbol])
+        below_sma_df[symbol] = get_above_is_below_sma(prices_df[symbol])
+        
+    summary_df = pandas.DataFrame(index=prices_df.index)
+
+    summary_df['number_high']  = is_ath_df.sum(axis=1)
+    summary_df['number_low']   = is_atl_df.sum(axis=1)
+    summary_df['percent_high'] = round(summary_df['number_high'] / stock_amount*100,2)
+    summary_df['percent_low']  = round(summary_df['number_low']  / stock_amount*100,2)
+
+    summary_df['number_above_sma']  = above_sma_df.sum(axis=1)
+    summary_df['number_below_sma']  = stock_amount-summary_df['number_above_sma'] 
+    summary_df['percent_above_sma'] = round(summary_df['number_above_sma'] / stock_amount*100,2)
+    summary_df['percent_below_sma'] = round(summary_df['number_below_sma'] / stock_amount*100,2)
+
+    df_result = SET_df.join(summary_df)
+
+    current_above_sma = above_sma_df.tail(1)
+    current_above_sma = current_above_sma[current_above_sma == 1].dropna(axis=1)
+    current_above_sma_result = pandas.DataFrame()
+    symbol_list = current_above_sma.columns
+    current_above_sma_result['symbol'] = symbol_list
+
+    prices  = prices_df.tail(2).reset_index()
+    volumes = vol_df.tail(2).reset_index()
+    values  = val_df.tail(2).reset_index()
+
+    price_list  = ["{:.2f}".format(round(prices.at[1, s],2))  for s in symbol_list]
+    chg_list    = ["{:.2f}".format(round(prices.at[1, s]-prices.at[0, s],2))  for s in symbol_list]
+    precent_chg_list = ["{:.2f}".format(round((prices.at[1, s]-prices.at[0, s])/prices.at[0, s]*100,2)) for s in symbol_list]
+    volume_list = [int(volumes.at[1, s]) for s in symbol_list]
+    value_list  = [int(values.at[1, s])  for s in symbol_list]
+
+    current_above_sma_result['last']       = price_list
+    current_above_sma_result['change']     = chg_list
+    current_above_sma_result['pct_change'] = precent_chg_list
+    current_above_sma_result['volume']     = volume_list
+    current_above_sma_result['value']      = value_list
+
+    ath_atl_result = df_result.drop(['number_above_sma','number_below_sma','percent_above_sma','percent_below_sma'],axis=1).tail(250).sort_index(ascending=False).reset_index()
+    ath_atl_result.DATE = ath_atl_result.DATE.astype(str)
+    sma_result = df_result.drop(['number_high','number_low','percent_high','percent_low'],axis=1).tail(250).sort_index(ascending=False).reset_index()
+    sma_result.DATE = sma_result.DATE.astype(str)
+    stocks_above_sma = current_above_sma_result.sort_values('value',ascending=False)
+
+    result = {'ath_atl_result':json.loads(ath_atl_result.to_json(orient='records',date_format ='ISO')),
+          'sma_result':json.loads(sma_result.to_json(orient='records',date_format ='ISO')),
+          'stocks_above_sma':json.loads(stocks_above_sma.to_json(orient='records',date_format ='ISO'))}
+    return result

@@ -41,6 +41,31 @@ def get_prices(db: Session, symbol_name: str):
             'data': ohlc}
     return out
 
+
+def get_ohlcvv(db: Session, symbol_name: str, len=200):
+    symbol_id_subquery = db.query(models.vStockAndIndex.ID).filter(models.vStockAndIndex.Name == symbol_name).subquery()
+    
+    results =  db.query(models.WatchOpenCloseSummary.OpenPrice,
+        models.WatchOpenCloseSummary.HighestPrice,
+        models.WatchOpenCloseSummary.LowestPrice,
+        models.WatchOpenCloseSummary.LastSalePrice,
+        models.WatchOpenCloseSummary.TotalSharesTraded,
+        models.WatchOpenCloseSummary.TotalValueTradedin1000,
+        models.WatchOpenCloseSummary.WatchOCS_Date,
+        ).filter(models.WatchOpenCloseSummary.SecurityNumber.in_(symbol_id_subquery)).order_by(models.WatchOpenCloseSummary.WatchOCS_Date.desc()).limit(len).all()
+    ohlc = [{'open': round(item[0], 2),
+                'high': round(item[1], 2),
+                'low': round(item[2], 2),
+                'close': round(item[3], 2),
+                'volume': round(item[4], 2),
+                'value': round(item[5], 2) * 1000,
+                'date': item[6].date()
+                }
+                for item in results]
+    out = { 'symbol': symbol_name,
+            'data': ohlc}
+    return out
+
 def get_prices_pct_change(db: Session, symbol_name: str):
     symbol_id_subquery = db.query(models.vStockAndIndex.ID).filter(models.vStockAndIndex.Name == symbol_name).subquery()
     

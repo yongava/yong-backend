@@ -42,7 +42,7 @@ def get_prices(db: Session, symbol_name: str):
     return out
 
 
-def get_ohlcvv(db: Session, symbol_name: str, len=200):
+def get_ohlcvv(db: Session, symbol_name: str, length=200):
     symbol_id_subquery = db.query(models.vStockAndIndex.ID).filter(models.vStockAndIndex.Name == symbol_name).subquery()
     
     results =  db.query(models.WatchOpenCloseSummary.OpenPrice,
@@ -52,7 +52,7 @@ def get_ohlcvv(db: Session, symbol_name: str, len=200):
         models.WatchOpenCloseSummary.TotalSharesTraded,
         models.WatchOpenCloseSummary.TotalValueTradedin1000,
         models.WatchOpenCloseSummary.WatchOCS_Date,
-        ).filter(models.WatchOpenCloseSummary.SecurityNumber.in_(symbol_id_subquery)).order_by(models.WatchOpenCloseSummary.WatchOCS_Date.desc()).limit(len).all()
+        ).filter(models.WatchOpenCloseSummary.SecurityNumber.in_(symbol_id_subquery)).order_by(models.WatchOpenCloseSummary.WatchOCS_Date.desc()).limit(length).all()
     ohlc = [{'open': round(item[0], 2),
                 'high': round(item[1], 2),
                 'low': round(item[2], 2),

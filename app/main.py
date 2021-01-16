@@ -66,6 +66,13 @@ def read_prices(symbol_name: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Symbol not found")
     return result
 
+@app.get("/ohlcvv/{symbol_name}/{length}")
+def read_ohlcvv(symbol_name: str, db: Session = Depends(get_db)):
+    result = crud.get_ohlcvv(db=db, symbol_name=symbol_name, len=length)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Symbol not found")
+    return result
+
 @app.get("/prices/recent/{symbol_name}")
 def read_prices_pct_change(symbol_name: str, db: Session = Depends(get_db)):
     result = crud.get_prices_pct_change(db=db, symbol_name=symbol_name)

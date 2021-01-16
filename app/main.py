@@ -67,7 +67,7 @@ def read_prices(symbol_name: str, db: Session = Depends(get_db)):
     return result
 
 @app.get("/ohlcvv/{symbol_name}/{length}")
-def read_ohlcvv(symbol_name: str, db: Session = Depends(get_db)):
+def read_ohlcvv(symbol_name: str, length: int, db: Session = Depends(get_db)):
     result = crud.get_ohlcvv(db=db, symbol_name=symbol_name, len=length)
     if result is None:
         raise HTTPException(status_code=404, detail="Symbol not found")

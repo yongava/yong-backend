@@ -561,3 +561,23 @@ def marketbreadth():
           'sma_result':json.loads(sma_result.to_json(orient='records',date_format ='ISO')),
           'stocks_above_sma':json.loads(stocks_above_sma.to_json(orient='records',date_format ='ISO'))}
     return result
+
+@app.get("/tech_screen_set/")
+def tech_screen_set():
+    output = requests.get('https://alpharesearch.blob.core.windows.net/yongcontainer/tech_screen_set.json').json()
+
+    if output is None:
+        raise HTTPException(status_code=404, detail="Symbol not found")
+
+    result = output
+    return result
+
+@app.get("/tech_screen_mai/")
+def tech_screen_mai():
+    output = requests.get('https://alpharesearch.blob.core.windows.net/yongcontainer/tech_screen_mai.json').json()
+
+    if output is None:
+        raise HTTPException(status_code=404, detail="Symbol not found")
+    
+    result = output
+    return result

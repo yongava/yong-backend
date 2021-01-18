@@ -20,11 +20,9 @@ import pathlib
 
 app = FastAPI()
 
-origins = ['*']
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*","http://localhost:8001", "http://0.0.0.0:8001","http://127.0.0.1:8080"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -591,7 +589,7 @@ def relative(market_group: str):
     period = 100
     set_df = pandas.DataFrame(requests.get(f'https://yong.alpha.lab.ai/ohlcvv/SET/{period}').json()['data']).set_index('date').sort_index()
     set_df.index = pandas.to_datetime(set_df.index)
-    mai_df = pandas.DataFrame(requests.get(f'https://yong.alpha.lab.ai/ohlcvv/SET/{period}').json()['data']).set_index('date').sort_index()
+    mai_df = pandas.DataFrame(requests.get(f'https://yong.alpha.lab.ai/ohlcvv/mai/{period}').json()['data']).set_index('date').sort_index()
     mai_df.index = pandas.to_datetime(mai_df.index)
 
     t = market_group

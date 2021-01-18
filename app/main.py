@@ -582,19 +582,19 @@ def tech_screen_mai():
     return result
 
 @app.get("/relative/{market_group}")
-def relative(market_group: str):
+def relative(market_group: str, db: Session = Depends(get_db)):
     set_industry = ['.AGRO','.CONSUMP','.FINCIAL','.INDUS','.PROPCON','.RESOURC','.SERVICE','.TECH']
     set_sector = ['.AGRI','.FOOD','.FASHION','.HOME','.PERSON','.BANK','.FIN','.INSUR','.AUTO','.IMM','.PAPER','.PETRO','.PKG','.STEEL','.CONMAT','.CONS','.PROP','.ENERG','.MINE','.COMM','.HELTH','.MEDIA','.PROF','.TOURISM','.TRANS','.ETRON','.ICT']
     mai_sector = ['.AGRO-ms','.CONSUMP-ms','.FINCIAL-ms','.INDUS-ms','.PROPCON-ms','.RESOURC-ms','.SERVICE-ms','.TECH-ms']
 
     period = 100
     # set_df = pandas.DataFrame(requests.get(f'https://yong.alpha.lab.ai/ohlcvv/SET/{period}').json()['data']).set_index('date').sort_index()
-    result = read_ohlcvv('SET', period)
+    result = crud.get_ohlcvv(db=db, symbol_name='SET', length=period)
     set_df = pandas.DataFrame(result['data']).set_index('date').sort_index()
     set_df.index = pandas.to_datetime(set_df.index)
 
     # mai_df = pandas.DataFrame(requests.get(f'https://yong.alpha.lab.ai/ohlcvv/mai/{period}').json()['data']).set_index('date').sort_index()
-    result = read_ohlcvv('mai', period)
+    result = crud.get_ohlcvv(db=db, symbol_name='mai', length=period)
     mai_df = pandas.DataFrame(result['data']).set_index('date').sort_index()
     mai_df.index = pandas.to_datetime(mai_df.index)
 
@@ -603,7 +603,7 @@ def relative(market_group: str):
         set_industry_df = set_df[['open','high','low','close']]
         for symbol in set_industry:
             # tmp_df = pandas.DataFrame(requests.get(f'https://yong.alpha.lab.ai/ohlcvv/{symbol}/{period}').json()['data']).set_index('date').sort_index()
-            result = read_ohlcvv(symbol, period)
+            result = crud.get_ohlcvv(db=db, symbol_name=symbol, length=period)
             tmp_df = pandas.DataFrame(result['data']).set_index('date').sort_index()
             set_industry_df[symbol.replace('.','')] = tmp_df['close'].divide(set_industry_df['close'])
         df = set_industry_df
@@ -611,7 +611,7 @@ def relative(market_group: str):
         set_sector_df = set_df[['open','high','low','close']]
         for symbol in set_sector:
             # tmp_df = pandas.DataFrame(requests.get(f'https://yong.alpha.lab.ai/ohlcvv/{symbol}/{period}').json()['data']).set_index('date').sort_index()
-            result = read_ohlcvv(symbol, period)
+            result = crud.get_ohlcvv(db=db, symbol_name=symbol, length=period)
             tmp_df = pandas.DataFrame(result['data']).set_index('date').sort_index()
             set_sector_df[symbol.replace('.','')] = tmp_df['close'].divide(set_sector_df['close'])     
         df = set_sector_df
@@ -619,7 +619,7 @@ def relative(market_group: str):
         mai_sector_df = mai_df[['open','high','low','close']]
         for symbol in mai_sector:
             # tmp_df = pandas.DataFrame(requests.get(f'https://yong.alpha.lab.ai/ohlcvv/{symbol}/{period}').json()['data']).set_index('date').sort_index()
-            result = read_ohlcvv(symbol, period)
+            result = crud.get_ohlcvv(db=db, symbol_name=symbol, length=period)
             tmp_df = pandas.DataFrame(result['data']).set_index('date').sort_index()
             mai_sector_df[symbol.replace('-ms','').replace('.','')] = tmp_df['close'].divide(mai_sector_df['close'])
         df = mai_sector_df
